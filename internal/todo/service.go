@@ -13,7 +13,7 @@ type Service struct {
 	DbHandler DbHandler
 }
 
-func (s *Service) Add(name string) error {
+func (s *Service) AddTodo(name string) error {
 	todos, err := s.DbHandler.GetTodos()
 	if err != nil {
 		return err
