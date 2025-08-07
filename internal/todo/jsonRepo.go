@@ -7,7 +7,11 @@ import (
 )
 
 type JsonFileHandler struct {
-	FilePath string
+	filePath string
+}
+
+func NewJsonFileHandler(fiePath string) *JsonFileHandler {
+	return &JsonFileHandler{filePath: fiePath}
 }
 
 func (f *JsonFileHandler) GetTodos() ([]Todo, error) {
@@ -15,7 +19,7 @@ func (f *JsonFileHandler) GetTodos() ([]Todo, error) {
 	var todos []Todo
 	var err error
 
-	data, err = os.ReadFile(f.FilePath)
+	data, err = os.ReadFile(f.filePath)
 	if err != nil {
 		return nil, appError.New("could not read file", err)
 	}
@@ -35,7 +39,7 @@ func (f *JsonFileHandler) SaveTodos(todos []Todo) error {
 		return appError.New("Could not pars struct to byte", err)
 	}
 
-	err = os.WriteFile(f.FilePath, data, os.FileMode(os.O_CREATE))
+	err = os.WriteFile(f.filePath, data, os.FileMode(os.O_CREATE))
 	if err != nil {
 		return appError.New("Could not write to file", err)
 	}
