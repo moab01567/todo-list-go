@@ -1,9 +1,5 @@
 package todo
 
-import (
-	"math/rand"
-)
-
 type DbHandler interface {
 	SaveTodos([]Todo) error
 	GetTodos() ([]Todo, error)
@@ -18,7 +14,7 @@ func (s *Service) AddTodo(name string) error {
 	if err != nil {
 		return err
 	}
-	todos = append(todos, Todo{Id: rand.Intn(100), Name: name, Done: false})
+	todos = append(todos, CreateRandomTodo(name))
 	err = s.DbHandler.SaveTodos(todos)
 	if err != nil {
 		return err
