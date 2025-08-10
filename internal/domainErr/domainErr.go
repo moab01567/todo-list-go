@@ -2,6 +2,7 @@ package domainErr
 
 import (
 	"errors"
+	"net/http"
 )
 
 type Code string
@@ -36,4 +37,23 @@ func AS(err error) (*DomainError, bool) {
 	var domainErr *DomainError
 	ok := errors.As(err, &domainErr)
 	return domainErr, ok
+}
+
+func GetHttpStatus(err error) int {
+	domainErr, ok := AS(err)
+	if !ok {
+		return http.StatusInternalServerError
+	}
+
+	switch domainErr.Code {
+	case CodeInternal:
+		return http.StatusInternalServerError
+	case CodeNotFound:
+		return http.StatusNotFound
+	case CodeUnauthorized:
+		return http.StatusUnauthorized
+	default:
+		return http.StatusInternalServerError
+	}
+
 }
