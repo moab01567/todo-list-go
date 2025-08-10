@@ -1,0 +1,3 @@
+services:
+  todo-app:
+    image: golang:1.24.6-alpine3.22
