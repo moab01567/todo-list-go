@@ -1,9 +1,9 @@
 package todo
 
 import (
-	"cli-todo/internal/appError"
 	"cli-todo/internal/domainErr"
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -14,45 +14,120 @@ type JsonFileHandler struct {
 func NewJsonFileHandler(fiePath string) *JsonFileHandler {
 	return &JsonFileHandler{filePath: fiePath}
 }
-func readFile(filePath string) ([]byte, error) {
-	data, err := os.ReadFile(filePath)
+
+func (f *JsonFileHandler) GetTodo(id string) (Todo, error) {
+	todos, err := f.readJsonFile()
 	if err != nil {
-		return nil, appError.New("could not read file", err)
+		return Todo{}, domainErr.New("Server Error", "Could not read file", err, domainErr.CodeInternal)
 	}
 
-	return data, err
+	for _, todo := range todos {
+		if todo.Id == id {
+			return todo, nil
+		}
+	}
+
+	return Todo{}, domainErr.New(
+		"Todo not found",
+		fmt.Sprintf("Todo with Id %v not found", id),
+		nil,
+		domainErr.CodeNotFound)
 }
-func (f *JsonFileHandler) DeleteTodoFromDB(id string) error {
+
+func (f *JsonFileHandler) SaveTodo(saveTodo Todo) (Todo, error) {
+	todos, err := f.readJsonFile()
+	if err != nil {
+		return Todo{}, domainErr.New("Server error", "failed to read file", err, domainErr.CodeInternal)
+	}
+
+	todos = append(todos, saveTodo)
+
+	err = f.saveJsonFile(todos)
+	if err != nil {
+		return Todo{}, domainErr.New("Server Error", "Could not Save file", err, domainErr.CodeInternal)
+	}
+
+	return saveTodo, nil
+}
+
+func (f *JsonFileHandler) DeleteTodo(deleteTodo Todo) error {
+	_, err := f.GetTodo(deleteTodo.Id)
+	if err != nil {
+		return err
+	}
+	todos, err := f.readJsonFile()
+	if err != nil {
+		return domainErr.New("Server error", "failed to read file", err, domainErr.CodeInternal)
+	}
+
+	newTodo := []Todo{}
+	for _, todo := range todos {
+		if todo.Id != deleteTodo.Id {
+			newTodo = append(newTodo, todo)
+		}
+	}
+
+	err = f.saveJsonFile(newTodo)
+	if err != nil {
+		return domainErr.New("Server Error", "Could not Save file", err, domainErr.CodeInternal)
+	}
 
 	return nil
 
 }
 
-func (f *JsonFileHandler) GetTodos() ([]Todo, error) {
-	data, err := readFile(f.filePath)
+func (f *JsonFileHandler) UpdateTodo(updateTodo Todo) (Todo, error) {
+	todo, err := f.GetTodo(updateTodo.Id)
 	if err != nil {
-		return nil, domainErr.New(string(domainErr.CodeInternal), err, domainErr.CodeInternal)
+		return Todo{}, err
 	}
 
-	var todos []Todo
-	err = json.Unmarshal(data, &todos)
+	err = f.DeleteTodo(todo)
 	if err != nil {
-		return nil, domainErr.New(string(domainErr.CodeInternal), err, domainErr.CodeInternal)
+		return Todo{}, err
 	}
+
+	updateTodo, err = f.SaveTodo(updateTodo)
+	if err != nil {
+		return Todo{}, err
+	}
+
+	return updateTodo, err
+}
+
+func (f *JsonFileHandler) GetAllTodos() ([]Todo, error) {
+	todos, err := f.readJsonFile()
+	if err != nil {
+		return nil, domainErr.New("Server error", "failed to read file", err, domainErr.CodeInternal)
+	}
+
 	return todos, nil
 }
 
-func (f *JsonFileHandler) SaveTodos(todos []Todo) error {
-	var data []byte
-	var err error
-	data, err = json.Marshal(todos)
+func (f *JsonFileHandler) readJsonFile() ([]Todo, error) {
+	dataBytes, err := os.ReadFile(f.filePath)
 	if err != nil {
-		return appError.New("Could not pars struct to byte", err)
+		return nil, err
 	}
 
-	err = os.WriteFile(f.filePath, data, os.FileMode(os.O_CREATE))
+	var todos []Todo
+	err = json.Unmarshal(dataBytes, &todos)
 	if err != nil {
-		return appError.New("Could not write to file", err)
+		return nil, err
+	}
+
+	return todos, err
+}
+
+func (f *JsonFileHandler) saveJsonFile(todos []Todo) error {
+	dataBytes, err := json.Marshal(todos)
+	if err != nil {
+		return err
+	}
+
+	err = os.WriteFile(f.filePath, dataBytes, os.FileMode(os.O_CREATE))
+	if err != nil {
+		return err
 	}
 	return nil
 }

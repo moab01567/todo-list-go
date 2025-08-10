@@ -14,9 +14,10 @@ const (
 )
 
 type DomainError struct {
-	Msg  string
-	Code Code
-	Err  error
+	Msg    string
+	Public string
+	Code   Code
+	Err    error
 }
 
 func (e *DomainError) Error() string {
@@ -27,11 +28,7 @@ func (e *DomainError) Unwrap() error {
 	return e.Err
 }
 
-func New(msg string, err error, code Code) *DomainError {
-	return &DomainError{Msg: msg, Err: err, Code: code}
-}
-
-func Wrap(msg string, err error, code Code) error {
+func New(public string, msg string, err error, code Code) error {
 	return &DomainError{Msg: msg, Err: err, Code: code}
 }
 

@@ -6,17 +6,17 @@ import (
 	"net/http"
 )
 
-type CrudOperation interface {
+type Service interface {
 	AddTodo(name string) error
 	DeleteTodo(id string) error
 	GetTodos() ([]Todo, error)
 }
 
 type TodoRouter struct {
-	service CrudOperation
+	service Service
 }
 
-func NewTodoRouter(service CrudOperation) *TodoRouter {
+func NewTodoRouter(service Service) *TodoRouter {
 	return &TodoRouter{service: service}
 }
 
