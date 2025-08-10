@@ -8,19 +8,19 @@ type Repository interface {
 	GetAllTodos() ([]Todo, error)
 }
 
-type ServiceTodo struct {
+type TodoService struct {
 	repo Repository
 }
 
-func NewService(repo Repository) *ServiceTodo {
-	return &ServiceTodo{repo: repo}
+func NewService(repo Repository) *TodoService {
+	return &TodoService{repo: repo}
 }
 
-func (s *ServiceTodo) GetTodos() ([]Todo, error) {
+func (s *TodoService) GetTodos() ([]Todo, error) {
 	return s.repo.GetAllTodos()
 }
 
-func (s *ServiceTodo) AddTodo(name string) error {
+func (s *TodoService) AddTodo(name string) error {
 	_, err := s.repo.SaveTodo(CreateTodo(name))
 	if err != nil {
 		return err
@@ -28,7 +28,7 @@ func (s *ServiceTodo) AddTodo(name string) error {
 	return nil
 }
 
-func (s *ServiceTodo) DeleteTodo(id string) error {
+func (s *TodoService) DeleteTodo(id string) error {
 	todo, err := s.repo.GetTodo(id)
 	if err != nil {
 		return err
