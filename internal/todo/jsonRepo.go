@@ -1,7 +1,8 @@
 package todo
 
 import (
-	"cli-todo/appError"
+	"cli-todo/internal/appError"
+	"cli-todo/internal/domainErr"
 	"encoding/json"
 	"os"
 )
@@ -13,20 +14,30 @@ type JsonFileHandler struct {
 func NewJsonFileHandler(fiePath string) *JsonFileHandler {
 	return &JsonFileHandler{filePath: fiePath}
 }
-
-func (f *JsonFileHandler) GetTodos() ([]Todo, error) {
-	var data []byte
-	var todos []Todo
-	var err error
-
-	data, err = os.ReadFile(f.filePath)
+func readFile(filePath string) ([]byte, error) {
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, appError.New("could not read file", err)
 	}
 
+	return data, err
+}
+func (f *JsonFileHandler) DeleteTodoFromDB(id string) error {
+
+	return nil
+
+}
+
+func (f *JsonFileHandler) GetTodos() ([]Todo, error) {
+	data, err := readFile(f.filePath)
+	if err != nil {
+		return nil, domainErr.New(string(domainErr.CodeInternal), err, domainErr.CodeInternal)
+	}
+
+	var todos []Todo
 	err = json.Unmarshal(data, &todos)
 	if err != nil {
-		return nil, appError.New("Could not pars json", err)
+		return nil, domainErr.New(string(domainErr.CodeInternal), err, domainErr.CodeInternal)
 	}
 	return todos, nil
 }

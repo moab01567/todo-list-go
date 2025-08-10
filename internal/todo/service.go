@@ -13,12 +13,16 @@ func NewService(dbHandler DbHandler) *Service {
 	return &Service{dbHandler: dbHandler}
 }
 
+func (s *Service) GetTodos() ([]Todo, error) {
+	return s.dbHandler.GetTodos()
+}
+
 func (s *Service) AddTodo(name string) error {
 	todos, err := s.dbHandler.GetTodos()
 	if err != nil {
 		return err
 	}
-	todos = append(todos, CreateRandomTodo(name))
+	todos = append(todos, CreateTodo(name))
 	err = s.dbHandler.SaveTodos(todos)
 	if err != nil {
 		return err

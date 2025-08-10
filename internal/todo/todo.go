@@ -10,7 +10,7 @@ type Todo struct {
 	Done bool
 }
 
-func CreateRandomTodo(name string) Todo {
+func CreateTodo(name string) Todo {
 	return Todo{Id: rand.Text(),
 		Name: name,
 		Done: false}

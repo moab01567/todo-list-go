@@ -1,9 +1,15 @@
 package main
 
-import "cli-todo/internal/httpserver"
+import (
+	"cli-todo/internal/httpserver"
+	"cli-todo/internal/todo"
+)
 
 func main() {
-	//var jsonFileHandler todo.DbHandler = &todo.JsonFileHandler{FilePath: "storage/json/data.json"}
-	//var service *todo.Service = &todo.Service{DbHandler: jsonFileHandler}
-	httpserver.StartServer()
+	dbHandler := todo.NewJsonFileHandler("storage/json/data.json")
+	service := todo.NewService(dbHandler)
+	todoRouter := todo.NewTodoRouter(service)
+
+	server := httpserver.NewServer(todoRouter)
+	server.StartServer()
 }

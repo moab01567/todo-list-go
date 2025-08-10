@@ -1,14 +1,23 @@
 package httpserver
 
 import (
-	"cli-todo/internal/todo"
 	"log"
 	"net/http"
 )
 
-func StartServer() {
+type Router interface {
+	GetHandler() http.Handler
+}
 
-	http.HandleFunc("/create", todo.CreateTodoRouter())
+type Server struct {
+	todoRouter Router
+}
 
-	log.Fatal(http.ListenAndServe(":8080", nil))
+func NewServer(todoRouter Router) *Server {
+	return &Server{todoRouter: todoRouter}
+}
+
+func (server *Server) StartServer() {
+
+	log.Fatal(http.ListenAndServe(":8080", server.todoRouter.GetHandler()))
 }
