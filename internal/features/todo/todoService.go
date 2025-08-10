@@ -20,12 +20,13 @@ func (s *TodoService) GetTodos() ([]Todo, error) {
 	return s.repo.GetAllTodos()
 }
 
-func (s *TodoService) AddTodo(name string) error {
-	_, err := s.repo.SaveTodo(CreateTodo(name))
+func (s *TodoService) AddTodo(name string) (Todo, error) {
+	todo, err := s.repo.SaveTodo(CreateTodo(name))
 	if err != nil {
-		return err
+		return Todo{}, err
 	}
-	return nil
+
+	return todo, err
 }
 
 func (s *TodoService) DeleteTodo(id string) error {
@@ -34,6 +35,22 @@ func (s *TodoService) DeleteTodo(id string) error {
 		return err
 	}
 	err = s.repo.DeleteTodo(todo)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *TodoService) ToggleMarkDone(id string) error {
+	todo, err := s.repo.GetTodo(id)
+	if err != nil {
+		return err
+	}
+
+	todo.Done = !todo.Done
+
+	_, err = s.repo.UpdateTodo(todo)
 	if err != nil {
 		return err
 	}

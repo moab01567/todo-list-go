@@ -2,7 +2,9 @@ package domainErr
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"runtime/debug"
 )
 
 type Code string
@@ -19,18 +21,21 @@ type DomainError struct {
 	Public string
 	Code   Code
 	Err    error
+	Stack  string
 }
 
+func New(public string, msg string, err error, code Code) error {
+	return &DomainError{Msg: msg, Err: err, Code: code, Stack: string(debug.Stack())}
+}
+func (e *DomainError) PrintError() {
+	fmt.Printf("%v\n%v\n%v\n", e.Stack, e.Err, e.Msg)
+}
 func (e *DomainError) Error() string {
 	return e.Msg
 }
 
 func (e *DomainError) Unwrap() error {
 	return e.Err
-}
-
-func New(public string, msg string, err error, code Code) error {
-	return &DomainError{Msg: msg, Err: err, Code: code}
 }
 
 func AS(err error) (*DomainError, bool) {
@@ -46,13 +51,12 @@ func GetHttpStatus(err error) int {
 	}
 
 	switch domainErr.Code {
-	case CodeInternal:
-		return http.StatusInternalServerError
 	case CodeNotFound:
 		return http.StatusNotFound
 	case CodeUnauthorized:
 		return http.StatusUnauthorized
 	default:
+		domainErr.PrintError()
 		return http.StatusInternalServerError
 	}
 

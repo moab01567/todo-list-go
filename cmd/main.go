@@ -1,8 +1,8 @@
 package main
 
 import (
+	"cli-todo/internal/features/todo"
 	"cli-todo/internal/httpserver"
-	"cli-todo/internal/todo"
 )
 
 func main() {

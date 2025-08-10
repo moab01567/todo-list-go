@@ -2,16 +2,15 @@ package todo
 
 import (
 	"cli-todo/internal/domainErr"
-	"encoding/json"
-	"fmt"
+	"cli-todo/internal/httpserver"
 	"net/http"
-	"strings"
 )
 
 type Service interface {
-	AddTodo(name string) error
+	AddTodo(name string) (Todo, error)
 	DeleteTodo(id string) error
 	GetTodos() ([]Todo, error)
+	ToggleMarkDone(id string) error
 }
 
 type TodoRouter struct {
@@ -27,6 +26,7 @@ func (todoRouter *TodoRouter) GetHandler() http.Handler {
 	serverMux.HandleFunc("GET /todos", todoRouter.getTodos())
 	serverMux.HandleFunc("POST /todo/n/{name}", todoRouter.createTodoRouter())
 	serverMux.HandleFunc("DELETE /todo/{id}", todoRouter.deleteTodoRouter())
+	serverMux.HandleFunc("PUT /todo/done/mark/{id}", todoRouter.toggleMarkDone())
 	return serverMux
 
 }
@@ -34,15 +34,15 @@ func (todoRouter *TodoRouter) GetHandler() http.Handler {
 func (todoRouter *TodoRouter) getTodos() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		todos, err := todoRouter.service.GetTodos()
+
 		if err != nil {
-			fmt.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(domainErr.GetHttpStatus(err))
 			return
 		}
-		dataBytes, err := json.Marshal(todos)
+
+		dataBytes, err := httpserver.TypeToBytes(todos)
 		if err != nil {
-			fmt.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			w.WriteHeader(domainErr.GetHttpStatus(err))
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
@@ -53,26 +53,62 @@ func (todoRouter *TodoRouter) getTodos() func(w http.ResponseWriter, r *http.Req
 
 func (todoRouter *TodoRouter) createTodoRouter() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		name := strings.Trim("", r.PathValue("name"))
-
+		name := r.PathValue("name")
 		if name == "" {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		if err := todoRouter.service.AddTodo(name); err != nil {
+		todo, err := todoRouter.service.AddTodo(name)
+		if err != nil {
 			w.WriteHeader(domainErr.GetHttpStatus(err))
+			return
 		}
+
+		dataBytes, err := httpserver.TypeToBytes(todo)
+		if err != nil {
+			w.WriteHeader(domainErr.GetHttpStatus(err))
+			return
+		}
+
 		w.WriteHeader(http.StatusCreated)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(dataBytes)
 	}
 }
 
 func (todoRouter *TodoRouter) deleteTodoRouter() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if id := r.PathValue("id"); id != "" {
-			err := todoRouter.service.DeleteTodo(id)
-			w.WriteHeader(domainErr.GetHttpStatus(err))
-		} else {
+		id := r.PathValue("id")
+		if id != "" {
 			w.WriteHeader(http.StatusBadRequest)
+			return
 		}
+
+		err := todoRouter.service.DeleteTodo(id)
+		if err != nil {
+			w.WriteHeader(domainErr.GetHttpStatus(err))
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
 	}
+}
+
+func (todoRouter *TodoRouter) toggleMarkDone() func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id := r.PathValue("id")
+		if id == "" {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		err := todoRouter.service.ToggleMarkDone(id)
+		if err != nil {
+			w.WriteHeader(domainErr.GetHttpStatus(err))
+			return
+		}
+
+		w.WriteHeader(http.StatusNoContent)
+	}
+
 }
