@@ -1,3 +1,11 @@
 services:
   todo-app:
-    image: golang:1.24.6-alpine3.22
+    image: golang:1.24.6-bookworm
+    working_dir: /app
+    ports:
+      - "localhost:8080:8080"
+    volumes:
+      - .:/app       
+    command: go run cmd/main.go 
+
+    
