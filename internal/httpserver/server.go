@@ -10,14 +10,15 @@ type Router interface {
 }
 
 type Server struct {
-	todoRouter Router
+	todoRouter       Router
+	authGoogleRouter Router
 }
 
-func NewServer(todoRouter Router) *Server {
-	return &Server{todoRouter: todoRouter}
+func NewServer(todoRouter, authGoogleRouter Router) *Server {
+	return &Server{todoRouter: todoRouter, authGoogleRouter: authGoogleRouter}
 }
 
 func (server *Server) StartServer() {
 
-	log.Fatal(http.ListenAndServe(":8080", server.todoRouter.GetHandler()))
+	log.Fatal(http.ListenAndServe(":8080", server.authGoogleRouter.GetHandler()))
 }

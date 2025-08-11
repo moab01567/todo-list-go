@@ -3,9 +3,11 @@ services:
     image: golang:1.24.6-bookworm
     working_dir: /app
     ports:
-      - "localhost:8080:8080"
+      - "127.0.0.1:8080:8080"
     volumes:
-      - .:/app       
+      - .:/app 
+    env_file:
+      - ./.env
     command: go run cmd/main.go 
 
     
