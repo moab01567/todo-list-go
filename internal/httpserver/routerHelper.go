@@ -15,3 +15,14 @@ func TypeToBytes(data any) ([]byte, error) {
 	}
 	return dataBytes, nil
 }
+
+func BytesToType(data []byte, v *any) error {
+	err := json.Unmarshal(data, v)
+	if err != nil {
+		return domainErr.New("Server Error",
+			"Could not pars bytes to type",
+			err,
+			domainErr.CodeInternal)
+	}
+	return nil
+}
