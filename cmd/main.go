@@ -11,8 +11,8 @@ func main() {
 	dbHandler := todo.NewJsonFileHandler("storage/json/data.json")
 	service := todo.NewService(dbHandler)
 	todoRouter := todo.NewTodoRouter(service)
-
-	googleAuthRouter := auth.NewGoogleAuthRouter(config.NewGoogleEnv())
+	googleEnv := config.NewGoogleEnv()
+	googleAuthRouter := auth.NewGoogleAuthRouter(googleEnv)
 
 	server := httpserver.NewServer(todoRouter, googleAuthRouter)
 	server.StartServer()

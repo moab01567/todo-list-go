@@ -10,7 +10,7 @@ import (
 )
 
 type GoogleEnv interface {
-	GetEnv() map[config.GEnv]string
+	GetEnv() map[string]string
 }
 
 type GoogleAuthRouter struct {
@@ -29,21 +29,20 @@ func (g *GoogleAuthRouter) GetHandler() http.Handler {
 }
 
 func (g *GoogleAuthRouter) redirectUser() func(w http.ResponseWriter, r *http.Request) {
+	env := g.GetEnv()
 	return func(w http.ResponseWriter, r *http.Request) {
-		urlBuilder, err := url.Parse(g.GetEnv()[config.GOOGLE_AUTH_URL])
+		urlBuilder, err := url.Parse(env[config.GOOGLE_AUTH_URL])
 		if err != nil {
 			return
 		}
-
 		query := urlBuilder.Query()
 		query.Set("response_type", "code")
-		query.Set("scope", g.GetEnv()[config.GOOGLE_SCOPE])
-		query.Set("redirect_uri", g.GetEnv()[config.GOOGLE_REDIRECT_URL])
-		query.Set("client_id", g.GetEnv()[config.GOOGLE_CLIENT_ID])
+		query.Set("scope", env[config.GOOGLE_SCOPE])
+		query.Set("redirect_uri", env[config.GOOGLE_REDIRECT_URL])
+		query.Set("client_id", env[config.GOOGLE_CLIENT_ID])
 		urlBuilder.RawQuery = query.Encode()
 
 		http.Redirect(w, r, urlBuilder.String(), http.StatusFound)
-
 	}
 }
 
@@ -91,15 +90,17 @@ func getCodeFromUrl(u *url.URL) string {
 }
 
 func (g *GoogleAuthRouter) buildCodeExchangeUrl(code string) string {
-	urlBuilder, err := url.Parse(g.token_url)
+	env := g.GetEnv()
+
+	urlBuilder, err := url.Parse(g.GetEnv()[config.GOOGLE_TOKEN_URL])
 	if err != nil {
 		return ""
 	}
 	urlBuilderQuery := urlBuilder.Query()
 	urlBuilderQuery.Set("code", code)
-	urlBuilderQuery.Set("client_id", g.client_id)
-	urlBuilderQuery.Set("client_secret", g.client_secret)
-	urlBuilderQuery.Set("redirect_uri", g.redirect_url)
+	urlBuilderQuery.Set("client_id", env[config.GOOGLE_CLIENT_ID])
+	urlBuilderQuery.Set("client_secret", env[config.GOOGLE_CLIENT_SECRET])
+	urlBuilderQuery.Set("redirect_uri", env[config.GOOGLE_REDIRECT_URL])
 	urlBuilderQuery.Set("grant_type", "authorization_code")
 	urlBuilder.RawQuery = urlBuilderQuery.Encode()
 	return urlBuilder.String()

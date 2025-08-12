@@ -1,27 +1,23 @@
 package config
 
-import (
-	"os"
-)
-
-type GEnv string
+import "os"
 
 const (
-	GOOGLE_AUTH_URL        GEnv = "GOOGLE_AUTH_URL"
-	GOOGLE_CLIENT_SECRET   GEnv = "GOOGLE_CLIENT_SECRET"
-	GOOGLE_CLIENT_ID       GEnv = "GOOGLE_CLIENT_ID"
-	GOOGLE_REDIRECT_URL    GEnv = "GOOGLE_REDIRECT_URL"
-	GOOGLE_SCOPE           GEnv = "GOOGLE_SCOPE"
-	GOOGLE_TOKEN_URL       GEnv = "GOOGLE_TOKEN_URL"
-	GOOGLE_REDIRECT_FAILED GEnv = "GOOGLE_REDIRECT_FAILED"
+	GOOGLE_AUTH_URL        = "GOOGLE_AUTH_URL"
+	GOOGLE_CLIENT_SECRET   = "GOOGLE_CLIENT_SECRET"
+	GOOGLE_CLIENT_ID       = "GOOGLE_CLIENT_ID"
+	GOOGLE_REDIRECT_URL    = "GOOGLE_REDIRECT_URL"
+	GOOGLE_SCOPE           = "GOOGLE_SCOPE"
+	GOOGLE_TOKEN_URL       = "GOOGLE_TOKEN_URL"
+	GOOGLE_REDIRECT_FAILED = "GOOGLE_REDIRECT_FAILED"
 )
 
-func NewGoogleEnv() GEnv {
-	return ""
+type GoogleEnv struct {
+	env map[string]string
 }
 
-func (ge GEnv) GetEnv() map[GEnv]string {
-	return map[GEnv]string{
+func NewGoogleEnv() GoogleEnv {
+	env := map[string]string{
 		GOOGLE_AUTH_URL:        os.Getenv(string(GOOGLE_AUTH_URL)),
 		GOOGLE_CLIENT_SECRET:   os.Getenv(string(GOOGLE_CLIENT_SECRET)),
 		GOOGLE_CLIENT_ID:       os.Getenv(string(GOOGLE_CLIENT_ID)),
@@ -30,4 +26,10 @@ func (ge GEnv) GetEnv() map[GEnv]string {
 		GOOGLE_TOKEN_URL:       os.Getenv(string(GOOGLE_TOKEN_URL)),
 		GOOGLE_REDIRECT_FAILED: os.Getenv(string(GOOGLE_REDIRECT_FAILED)),
 	}
+	//TODO: add ENV checker here
+	return GoogleEnv{env: env}
+}
+
+func (ge GoogleEnv) GetEnv() map[string]string {
+	return ge.env
 }
