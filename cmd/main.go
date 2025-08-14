@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	dbHandler := todo.NewJsonFileHandler("storage/json/data.json")
-	service := todo.NewService(dbHandler)
+	repository := todo.NewJsonFileHandler("storage/json/data.json")
+	service := todo.NewService(repository)
 	todoRouter := todo.NewTodoRouter(service)
 	googleEnv := config.NewGoogleEnv()
 	googleAuthRouter := auth.NewGoogleAuthRouter(googleEnv)

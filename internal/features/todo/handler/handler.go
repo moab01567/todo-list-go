@@ -1,15 +1,16 @@
-package todo
+package handler
 
 import (
 	"cli-todo/internal/domainErr"
+	"cli-todo/internal/features/todo/model"
 	"cli-todo/internal/httpserver"
 	"net/http"
 )
 
 type Service interface {
-	AddTodo(name string) (Todo, error)
+	AddTodo(name string) (model.Todo, error)
 	DeleteTodo(id string) error
-	GetTodos() ([]Todo, error)
+	GetTodos() ([]model.Todo, error)
 	ToggleMarkDone(id string) error
 }
 

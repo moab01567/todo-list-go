@@ -1,11 +1,13 @@
-package todo
+package service
+
+import "cli-todo/internal/features/todo/model"
 
 type Repository interface {
-	GetTodo(id string) (Todo, error)
-	SaveTodo(Todo) (Todo, error)
-	DeleteTodo(Todo) error
-	UpdateTodo(Todo) (Todo, error)
-	GetAllTodos() ([]Todo, error)
+	GetTodo(id string) (model.Todo, error)
+	SaveTodo(model.Todo) (model.Todo, error)
+	DeleteTodo(model.Todo) error
+	UpdateTodo(model.Todo) (model.Todo, error)
+	GetAllTodos() ([]model.Todo, error)
 }
 
 type TodoService struct {
@@ -16,14 +18,14 @@ func NewService(repo Repository) *TodoService {
 	return &TodoService{repo: repo}
 }
 
-func (s *TodoService) GetTodos() ([]Todo, error) {
+func (s *TodoService) GetTodos() ([]model.Todo, error) {
 	return s.repo.GetAllTodos()
 }
 
-func (s *TodoService) AddTodo(name string) (Todo, error) {
-	todo, err := s.repo.SaveTodo(CreateTodo(name))
+func (s *TodoService) AddTodo(name string) (model.Todo, error) {
+	todo, err := s.repo.SaveTodo(model.CreateTodo(name))
 	if err != nil {
-		return Todo{}, err
+		return model.Todo{}, err
 	}
 
 	return todo, err

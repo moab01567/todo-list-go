@@ -25,6 +25,7 @@ func (g *GoogleAuthRouter) GetHandler() http.Handler {
 	handler := http.NewServeMux()
 	handler.HandleFunc("GET /auth/google", g.redirectUser())
 	handler.HandleFunc("GET /auth/google/callback", g.callback())
+	handler.HandleFunc("GET /auth/success", g.callback())
 	return handler
 }
 
@@ -67,8 +68,8 @@ func (g *GoogleAuthRouter) callback() func(w http.ResponseWriter, r *http.Reques
 		if err != nil {
 			return
 		}
-		fmt.Println(u)
 
+		fmt.Println(u)
 	}
 }
 
