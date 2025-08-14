@@ -18,7 +18,7 @@ type TodoRouter struct {
 	service Service
 }
 
-func NewTodoRouter(service Service) *TodoRouter {
+func NewTodoHandler(service Service) *TodoRouter {
 	return &TodoRouter{service: service}
 }
 
