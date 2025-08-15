@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"cli-todo/internal/config"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,16 +8,12 @@ import (
 	"net/url"
 )
 
-type GoogleEnv interface {
-	GetEnv() map[string]string
-}
-
 type GoogleAuthRouter struct {
-	GoogleEnv
+	env map[GoogleEnv]string
 }
 
-func NewGoogleAuthRouter(env GoogleEnv) *GoogleAuthRouter {
-	return &GoogleAuthRouter{GoogleEnv: env}
+func NewGoogleAuthRouter() *GoogleAuthRouter {
+	return &GoogleAuthRouter{env: GetGoogleEnvMap()}
 }
 
 func (g *GoogleAuthRouter) GetHandler() http.Handler {
@@ -30,17 +25,17 @@ func (g *GoogleAuthRouter) GetHandler() http.Handler {
 }
 
 func (g *GoogleAuthRouter) redirectUser() func(w http.ResponseWriter, r *http.Request) {
-	env := g.GetEnv()
+
 	return func(w http.ResponseWriter, r *http.Request) {
-		urlBuilder, err := url.Parse(env[config.GOOGLE_AUTH_URL])
+		urlBuilder, err := url.Parse(g.env[GoogleAuthUrl])
 		if err != nil {
 			return
 		}
 		query := urlBuilder.Query()
 		query.Set("response_type", "code")
-		query.Set("scope", env[config.GOOGLE_SCOPE])
-		query.Set("redirect_uri", env[config.GOOGLE_REDIRECT_URL])
-		query.Set("client_id", env[config.GOOGLE_CLIENT_ID])
+		query.Set("scope", g.env[GoogleScope])
+		query.Set("redirect_uri", g.env[GoogleRedirectUrl])
+		query.Set("client_id", g.env[GoogleClientId])
 		urlBuilder.RawQuery = query.Encode()
 
 		http.Redirect(w, r, urlBuilder.String(), http.StatusFound)
@@ -70,6 +65,14 @@ func (g *GoogleAuthRouter) callback() func(w http.ResponseWriter, r *http.Reques
 		}
 
 		fmt.Println(u)
+		http.SetCookie(w, &http.Cookie{Name: "code",
+			Value:    "test",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteStrictMode,
+			Path:     "/",
+			MaxAge:   60})
+		w.Write([]byte("hello world " + u.Name))
 	}
 }
 
@@ -91,17 +94,15 @@ func getCodeFromUrl(u *url.URL) string {
 }
 
 func (g *GoogleAuthRouter) buildCodeExchangeUrl(code string) string {
-	env := g.GetEnv()
-
-	urlBuilder, err := url.Parse(g.GetEnv()[config.GOOGLE_TOKEN_URL])
+	urlBuilder, err := url.Parse(g.env[GoogleAuthUrl])
 	if err != nil {
 		return ""
 	}
 	urlBuilderQuery := urlBuilder.Query()
 	urlBuilderQuery.Set("code", code)
-	urlBuilderQuery.Set("client_id", env[config.GOOGLE_CLIENT_ID])
-	urlBuilderQuery.Set("client_secret", env[config.GOOGLE_CLIENT_SECRET])
-	urlBuilderQuery.Set("redirect_uri", env[config.GOOGLE_REDIRECT_URL])
+	urlBuilderQuery.Set("client_id", g.env[GoogleClientId])
+	urlBuilderQuery.Set("client_secret", g.env[GoogleClientSecret])
+	urlBuilderQuery.Set("redirect_uri", g.env[GoogleRedirectUrl])
 	urlBuilderQuery.Set("grant_type", "authorization_code")
 	urlBuilder.RawQuery = urlBuilderQuery.Encode()
 	return urlBuilder.String()
