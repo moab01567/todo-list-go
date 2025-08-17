@@ -22,7 +22,7 @@ func NewTodoHandler(service Service) *TodoRouter {
 	return &TodoRouter{service: service}
 }
 
-func (todoRouter *TodoRouter) GetHandler() http.Handler {
+func (todoRouter *TodoRouter) Routes() http.Handler {
 	serverMux := http.NewServeMux()
 	serverMux.HandleFunc("GET /todos", todoRouter.getTodos())
 	serverMux.HandleFunc("POST /todo/n/{name}", todoRouter.createTodoRouter())

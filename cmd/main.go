@@ -1,7 +1,7 @@
 package main
 
 import (
-	"cli-todo/internal/features/auth"
+	"cli-todo/internal/features/googleauth"
 	todoHandler "cli-todo/internal/features/todo/handler"
 	todoRepo "cli-todo/internal/features/todo/repository"
 	todoService "cli-todo/internal/features/todo/service"
@@ -10,11 +10,13 @@ import (
 
 func main() {
 	repository := todoRepo.NewJsonFileHandler("storage/json/data.json")
-	//sql := todoRepo.NewSqlRepo("storage/sqlLight/todo.db")
+	//sql := todoRepo.NewSqlRepo("storage/sqlLight/db.db")
 	service := todoService.NewService(repository)
 	todoRouter := todoHandler.NewTodoHandler(service)
 
-	googleAuthRouter := auth.NewGoogleAuthRouter()
+	// init google googleauth :)
+	googleEnv := googleauth.NewGoogleEnv()
+	googleAuthRouter := googleauth.NewGoogleHandler(googleEnv)
 
 	server := httpserver.NewServer(todoRouter, googleAuthRouter)
 	server.StartServer()

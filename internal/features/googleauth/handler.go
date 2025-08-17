@@ -1,4 +1,4 @@
-package auth
+package googleauth
 
 import (
 	"encoding/json"
@@ -8,41 +8,39 @@ import (
 	"net/url"
 )
 
-type GoogleAuthRouter struct {
-	env map[GoogleEnv]string
+type GoogleHandler struct {
+	env *Env
 }
 
-func NewGoogleAuthRouter() *GoogleAuthRouter {
-	return &GoogleAuthRouter{env: GetGoogleEnvMap()}
+func NewGoogleHandler(env *Env) *GoogleHandler {
+	return &GoogleHandler{env: env}
 }
 
-func (g *GoogleAuthRouter) GetHandler() http.Handler {
-	handler := http.NewServeMux()
-	handler.HandleFunc("GET /auth/google", g.redirectUser())
-	handler.HandleFunc("GET /auth/google/callback", g.callback())
-	handler.HandleFunc("GET /auth/success", g.callback())
-	return handler
+func (g *GoogleHandler) Routes() http.Handler {
+	serveMux := http.NewServeMux()
+	serveMux.HandleFunc("GET /auth/google", g.redirectUser())
+	serveMux.HandleFunc("GET /auth/google/callback", g.callback())
+	return serveMux
 }
 
-func (g *GoogleAuthRouter) redirectUser() func(w http.ResponseWriter, r *http.Request) {
+func (g *GoogleHandler) redirectUser() func(w http.ResponseWriter, r *http.Request) {
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		urlBuilder, err := url.Parse(g.env[GoogleAuthUrl])
+		urlBuilder, err := url.Parse(g.env.AuthUrl)
 		if err != nil {
 			return
 		}
 		query := urlBuilder.Query()
 		query.Set("response_type", "code")
-		query.Set("scope", g.env[GoogleScope])
-		query.Set("redirect_uri", g.env[GoogleRedirectUrl])
-		query.Set("client_id", g.env[GoogleClientId])
+		query.Set("scope", g.env.Scopes)
+		query.Set("redirect_uri", g.env.RedirectUrl)
+		query.Set("client_id", g.env.ClientID)
 		urlBuilder.RawQuery = query.Encode()
-
 		http.Redirect(w, r, urlBuilder.String(), http.StatusFound)
 	}
 }
 
-func (g *GoogleAuthRouter) callback() func(w http.ResponseWriter, r *http.Request) {
+func (g *GoogleHandler) callback() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := getCodeFromUrl(r.URL)
 		if code == "" {
@@ -93,16 +91,16 @@ func getCodeFromUrl(u *url.URL) string {
 	return code
 }
 
-func (g *GoogleAuthRouter) buildCodeExchangeUrl(code string) string {
-	urlBuilder, err := url.Parse(g.env[GoogleAuthUrl])
+func (g *GoogleHandler) buildCodeExchangeUrl(code string) string {
+	urlBuilder, err := url.Parse(g.env.AuthUrl)
 	if err != nil {
 		return ""
 	}
 	urlBuilderQuery := urlBuilder.Query()
 	urlBuilderQuery.Set("code", code)
-	urlBuilderQuery.Set("client_id", g.env[GoogleClientId])
-	urlBuilderQuery.Set("client_secret", g.env[GoogleClientSecret])
-	urlBuilderQuery.Set("redirect_uri", g.env[GoogleRedirectUrl])
+	urlBuilderQuery.Set("client_id", g.env.ClientID)
+	urlBuilderQuery.Set("client_secret", g.env.ClientSecret)
+	urlBuilderQuery.Set("redirect_uri", g.env.RedirectUrl)
 	urlBuilderQuery.Set("grant_type", "authorization_code")
 	urlBuilder.RawQuery = urlBuilderQuery.Encode()
 	return urlBuilder.String()

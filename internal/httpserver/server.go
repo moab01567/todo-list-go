@@ -5,20 +5,20 @@ import (
 	"net/http"
 )
 
-type Router interface {
-	GetHandler() http.Handler
+type Handler interface {
+	Routes() http.Handler
 }
 
 type Server struct {
-	todoRouter       Router
-	authGoogleRouter Router
+	todoRouter       Handler
+	authGoogleRouter Handler
 }
 
-func NewServer(todoRouter, authGoogleRouter Router) *Server {
+func NewServer(todoRouter, authGoogleRouter Handler) *Server {
 	return &Server{todoRouter: todoRouter, authGoogleRouter: authGoogleRouter}
 }
 
 func (server *Server) StartServer() {
 
-	log.Fatal(http.ListenAndServe(":8080", server.authGoogleRouter.GetHandler()))
+	log.Fatal(http.ListenAndServe(":8080", server.authGoogleRouter.Routes()))
 }
