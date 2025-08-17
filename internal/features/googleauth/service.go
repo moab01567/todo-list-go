@@ -11,16 +11,16 @@ type UserCreator interface {
 	CreateNewAccount(user *user.Account) error
 }
 
-type Service struct {
+type AuthService struct {
 	UserFinder
 	UserCreator
 	repo Repository
 }
 
-func NewService(repo Repository) *Service {
-	return &Service{nil, nil, repo}
+func NewService(repo Repository) *AuthService {
+	return &AuthService{nil, nil, repo}
 }
 
-func (service *Service) FindUserBySubAndIssuer(sub, issuer string) (*user.Account, error) {
+func (service *AuthService) FindUserBySubAndIssuer(sub, issuer string) (*user.Account, error) {
 	return nil, nil
 }
