@@ -31,6 +31,7 @@ func New(msg string, err error, code Code) *DomainError {
 func (e *DomainError) PrintError() {
 	fmt.Printf("%v\n%v\n%v\n", e.Stack, e.Err, e.Msg)
 }
+
 func (e *DomainError) Error() string {
 	return e.Msg
 }
