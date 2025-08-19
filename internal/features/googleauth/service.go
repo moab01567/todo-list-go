@@ -21,6 +21,8 @@ func NewService(repo Repository) *AuthService {
 	return &AuthService{nil, nil, repo}
 }
 
-func (service *AuthService) FindUserBySubAndIssuer(sub, issuer string) (*user.Account, error) {
+func (service *AuthService) CreateNewSessionToken(userInfo OauthUserInfo) (*user.Account, error) {
+	user, err := service.UserFinder.FindUserBySubAndIssuer(userInfo.Sub, string(userInfo.Issuer))
+
 	return nil, nil
 }

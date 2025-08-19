@@ -1,6 +1,13 @@
 package googleauth
 
+type OauthIssuer string
+
+const (
+	GoogleAuth OauthIssuer = "Google"
+)
+
 type OauthUserInfo struct {
+	Issuer  OauthIssuer
 	Sub     string
 	Name    string
 	Email   string

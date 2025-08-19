@@ -9,6 +9,7 @@ import (
 )
 
 func main() {
+
 	repository := todoRepo.NewJsonFileHandler("storage/json/data.json")
 	//sql := todoRepo.NewSqlRepo("storage/sqlLight/db.db")
 	service := todoService.NewService(repository)
@@ -16,7 +17,8 @@ func main() {
 
 	// init google googleauth :)
 	googleEnv := googleauth.NewGoogleEnv()
-	googleAuthRouter := googleauth.NewGoogleHandler(googleEnv)
+	googleOauthService := googleauth.NewOauthService(googleEnv)
+	googleAuthRouter := googleauth.NewGoogleHandler(googleOauthService)
 
 	server := httpserver.NewServer(todoRouter, googleAuthRouter)
 	server.StartServer()

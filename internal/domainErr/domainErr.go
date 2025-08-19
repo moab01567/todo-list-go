@@ -10,21 +10,22 @@ import (
 type Code string
 
 const (
-	CodeInvalid      Code = "INVALID"
 	CodeNotFound     Code = "NOT_FOUND"
 	CodeUnauthorized Code = "UNAUTHORIZED"
-	CodeInternal     Code = "INTERNAL"
+	CodeInternal     Code = "INTERNAL_SERVER_ERROR"
 )
 
 type DomainError struct {
-	Msg    string
-	Public string
-	Code   Code
-	Err    error
-	Stack  string
+	Msg   string
+	Code  Code
+	Err   error
+	Stack string
 }
 
-func New(public string, msg string, err error, code Code) error {
+func New(msg string, err error, code Code) *DomainError {
+	if msg == "" {
+		msg = string(code)
+	}
 	return &DomainError{Msg: msg, Err: err, Code: code, Stack: string(debug.Stack())}
 }
 func (e *DomainError) PrintError() {

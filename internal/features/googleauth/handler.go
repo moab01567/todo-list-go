@@ -1,6 +1,7 @@
 package googleauth
 
 import (
+	"cli-todo/internal/domainErr"
 	"net/http"
 )
 
@@ -22,9 +23,9 @@ func (g *GoogleHandler) Routes() http.Handler {
 
 func (g *GoogleHandler) redirectUser() func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		url := g.oauthService.RedirectUrl()
-		if url == "" {
-			//Todo Handle Error
+		url, err := g.oauthService.RedirectUrl()
+		if err != nil {
+			http.Redirect(w, r, url, domainErr.GetHttpStatus(err))
 			return
 		}
 		http.Redirect(w, r, url, http.StatusFound)

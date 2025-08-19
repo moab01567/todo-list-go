@@ -1,6 +1,7 @@
 package googleauth
 
 import (
+	"cli-todo/internal/domainErr"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -16,10 +17,12 @@ func NewOauthService(env *Env) *OauthService {
 	return &OauthService{env: env}
 }
 
-func (o *OauthService) RedirectUrl() string {
+// Create the redirectURl,
+// if error, returns a failed redirecturl and error
+func (o *OauthService) RedirectUrl() (string, error) {
 	urlBuilder, err := url.Parse(o.env.AuthUrl)
 	if err != nil {
-		return ""
+		return o.env.RedirectUrlFailed, domainErr.New("failed to parse Auth url", err, domainErr.CodeInternal)
 	}
 	query := urlBuilder.Query()
 	query.Set("response_type", "code")
@@ -27,40 +30,32 @@ func (o *OauthService) RedirectUrl() string {
 	query.Set("redirect_uri", o.env.RedirectUrl)
 	query.Set("client_id", o.env.ClientID)
 	urlBuilder.RawQuery = query.Encode()
-
-	return urlBuilder.String()
+	if urlBuilder.String() != "" {
+		return o.env.RedirectUrlFailed, domainErr.New("failed to parse Auth url", err, domainErr.CodeInternal)
+	}
+	return urlBuilder.String(), nil
 }
 
-func (o OauthService) ExchangeCodeForUser(url *url.URL) (*OauthUserInfo, error) {
+func (o *OauthService) ExchangeCodeForUser(url *url.URL) (*OauthUserInfo, error) {
 	code := getCodeFromUrl(url)
 	if code == "" {
-		fmt.Println("her1")
-		//Todo handle error
-		return nil, nil
+		return nil, domainErr.New("", fmt.Errorf("faled to getCodeFromUrl"), domainErr.CodeInternal)
 	}
 
 	codeExchangeUrl := buildCodeExchangeUrl(code, o.env)
 	if codeExchangeUrl == "" {
-		//Todo handle error
-		fmt.Println("her2")
-		return nil, nil
+		return nil, domainErr.New("", fmt.Errorf("faled to buildCodeExchangeUrl"), domainErr.CodeInternal)
 	}
 
 	tokenInfo, err := getTokenInfo(codeExchangeUrl)
 	if err != nil {
-		//Todo handle error
-		fmt.Println("her3")
-		fmt.Println(err)
-		return nil, nil
+		return nil, domainErr.New("", err, domainErr.CodeInternal)
 	}
 
 	userInfo, err := getUsers(*tokenInfo)
 	if err != nil {
-		//Todo handle error
-		fmt.Println("her4")
-		return nil, nil
+		return nil, domainErr.New("", err, domainErr.CodeInternal)
 	}
-	fmt.Println(userInfo)
 	return &userInfo, nil
 }
 
@@ -104,7 +99,6 @@ func getTokenInfo(codeExchangeUrl string) (*OauthTokenInfo, error) {
 		}
 	}(tokenReq.Body)
 
-	fmt.Println(string(dataBytes))
 	tokenInfo := &OauthTokenInfo{}
 	err = json.Unmarshal(dataBytes, tokenInfo)
 	if err != nil {
@@ -134,6 +128,10 @@ func getUsers(t OauthTokenInfo) (OauthUserInfo, error) {
 	if err != nil {
 		return OauthUserInfo{}, err
 	}
+
+	//future me is going to be mad, but past me is happy
+	//need to be changed if other Oauth will be added later
+	u.Issuer = GoogleAuth
 
 	return u, nil
 }
